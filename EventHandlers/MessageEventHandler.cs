@@ -106,17 +106,20 @@ namespace MyLineBot.EventHandlers
                 string jsonString = JsonSerializer.Serialize(flexMessage);
                 Console.WriteLine($"PostedData {jsonString}");
 
-                using (var requestMessage = new HttpRequestMessage(HttpMethod.Post, "https://api.line.me/v2/bot/message/reply"))
-                {
-                    requestMessage.Headers.Add("Authorization", $"Bearer {chAccess}");
+                var requestMsg = new SendRequest().replyMsg(jsonString, chAccess);
+                await client.SendAsync(requestMsg);
 
-                    requestMessage.Content =
-                        new StringContent(
-                            jsonString,
-                            Encoding.UTF8, "application/json");
+                //using (var requestMessage = new HttpRequestMessage(HttpMethod.Post, "https://api.line.me/v2/bot/message/reply"))
+                //{
+                //    requestMessage.Headers.Add("Authorization", $"Bearer {chAccess}");
 
-                    await client.SendAsync(requestMessage);
-                }
+                //    requestMessage.Content =
+                //        new StringContent(
+                //            jsonString,
+                //            Encoding.UTF8, "application/json");
+
+                //    await client.SendAsync(requestMessage);
+                //}
             }
             else if (evt.Message.Text.Contains("Card"))
             {
