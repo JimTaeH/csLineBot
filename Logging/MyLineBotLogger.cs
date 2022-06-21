@@ -22,7 +22,8 @@ namespace MyLineBot
 
         public Task LogReceivedEvents(byte[] eventsData)
         {
-            Console.WriteLine($"Events received: {Encoding.UTF8.GetString(eventsData)}");
+            var evtData = Encoding.UTF8.GetString(eventsData);
+            Console.WriteLine($"Events received: {evtData}");
 
             return Task.CompletedTask;
         }
