@@ -17,5 +17,19 @@ namespace MyLineBot.EventHandlers
 
             return requestMessage;
         }
+        public dynamic linkRMOneUser(string userId, string richMenuId, string channelAccess) 
+        {
+            var requestMessage = new HttpRequestMessage(HttpMethod.Post, $"https://api.line.me/v2/bot/user/{userId}/richmenu/{richMenuId}");
+            requestMessage.Headers.Add("Authorization", $"Bearer {channelAccess}");
+
+            return requestMessage;
+        }
+        public dynamic unlinkRMOneUser(string userId, string channelAccess) 
+        {
+            var requestMessage = new HttpRequestMessage(HttpMethod.Delete, $"https://api.line.me/v2/bot/user/{userId}/richmenu");
+            requestMessage.Headers.Add("Authorization", $"Bearer {channelAccess}");
+
+            return requestMessage;
+        }
     }
 }

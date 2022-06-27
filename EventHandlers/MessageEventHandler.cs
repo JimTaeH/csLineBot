@@ -108,18 +108,6 @@ namespace MyLineBot.EventHandlers
 
                 var requestMsg = new SendRequest().replyMsg(jsonString, chAccess);
                 await client.SendAsync(requestMsg);
-
-                //using (var requestMessage = new HttpRequestMessage(HttpMethod.Post, "https://api.line.me/v2/bot/message/reply"))
-                //{
-                //    requestMessage.Headers.Add("Authorization", $"Bearer {chAccess}");
-
-                //    requestMessage.Content =
-                //        new StringContent(
-                //            jsonString,
-                //            Encoding.UTF8, "application/json");
-
-                //    await client.SendAsync(requestMessage);
-                //}
             }
             else if (evt.Message.Text.Contains("Card"))
             {
@@ -134,17 +122,8 @@ namespace MyLineBot.EventHandlers
                 string jsonString = JsonSerializer.Serialize(flexMessage);
                 Console.WriteLine($"PostedData {jsonString}");
 
-                using (var requestMessage = new HttpRequestMessage(HttpMethod.Post, "https://api.line.me/v2/bot/message/reply"))
-                {
-                    requestMessage.Headers.Add("Authorization", $"Bearer {chAccess}");
-
-                    requestMessage.Content =
-                        new StringContent(
-                            jsonString,
-                            Encoding.UTF8, "application/json");
-
-                    await client.SendAsync(requestMessage);
-                }
+                var requestMsg = new SendRequest().replyMsg(jsonString, chAccess);
+                await client.SendAsync(requestMsg);
             }
             else if (evt.Message.Text.Contains("Detail"))
             {
@@ -158,17 +137,23 @@ namespace MyLineBot.EventHandlers
                 string jsonString = JsonSerializer.Serialize(flexMessage);
                 Console.WriteLine($"PostedData {jsonString}");
 
-                using (var requestMessage = new HttpRequestMessage(HttpMethod.Post, "https://api.line.me/v2/bot/message/reply"))
-                {
-                    requestMessage.Headers.Add("Authorization", $"Bearer {chAccess}");
+                var requestMsg = new SendRequest().replyMsg(jsonString, chAccess);
+                await client.SendAsync(requestMsg);
+            }
+            else if (evt.Message.Text == "Track") 
+            {
+                var flexMessage = new flexTrack().flexTrackMsg(evt.ReplyToken);
 
-                    requestMessage.Content =
-                        new StringContent(
-                            jsonString,
-                            Encoding.UTF8, "application/json");
+                string jsonString = JsonSerializer.Serialize(flexMessage);
+                Console.WriteLine($"PostedData {jsonString}");
 
-                    await client.SendAsync(requestMessage);
-                }
+                var requestMsg = new SendRequest().replyMsg(jsonString, chAccess);
+                await client.SendAsync(requestMsg);
+            }
+            else if (evt.Message.Text == "Track txt")
+            {
+                var response = new TextMessage("บริษัท A หมายเลขใบงาน 012345678 ขณะนี้สถานะของพัสดุคือ เข้าระบบ เมื่อวันที่ 06/27/2022 เวลา 10:00 น.");
+                await lineBot.Reply(evt.ReplyToken, response);
             }
             else if (evt.Message.Text == "Create Me")
             {
@@ -186,13 +171,8 @@ namespace MyLineBot.EventHandlers
                 var response = new TextMessage("Created Success");
                 await lineBot.Reply(evt.ReplyToken, response);
 
-                using (var requestMessage = new HttpRequestMessage(HttpMethod.Post, $"https://api.line.me/v2/bot/user/{userId}/richmenu/{richMenuId}"))
-                {
-                    requestMessage.Headers.Add("Authorization", $"Bearer {chAccess}");
-
-                    await client.SendAsync(requestMessage);
-                }
-
+                var requestMsg = new SendRequest().linkRMOneUser(userId, richMenuId, chAccess);
+                await client.SendAsync(requestMsg);
             }
             else if (evt.Message.Text == "Delete Me")
             {
@@ -205,12 +185,8 @@ namespace MyLineBot.EventHandlers
                 var response = new TextMessage("Deleted Success");
                 await lineBot.Reply(evt.ReplyToken, response);
 
-                using (var requestMessage = new HttpRequestMessage(HttpMethod.Delete, $"https://api.line.me/v2/bot/user/{userId}/richmenu"))
-                {
-                    requestMessage.Headers.Add("Authorization", $"Bearer {chAccess}");
-
-                    await client.SendAsync(requestMessage);
-                }
+                var requestMsg = new SendRequest().unlinkRMOneUser(userId, chAccess);
+                await client.SendAsync(requestMsg);
             }
         }
     }
