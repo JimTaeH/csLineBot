@@ -17,6 +17,18 @@ namespace MyLineBot.EventHandlers
 
             return requestMessage;
         }
+        public dynamic pushMsg(string jsStr, string channelAccess)
+        {
+            var requestMessage = new HttpRequestMessage(HttpMethod.Post, "https://api.line.me/v2/bot/message/multicast");
+            requestMessage.Headers.Add("Authorization", $"Bearer {channelAccess}");
+
+            requestMessage.Content =
+                new StringContent(
+                    jsStr,
+                    Encoding.UTF8, "application/json");
+
+            return requestMessage;
+        }
         public dynamic linkRMOneUser(string userId, string richMenuId, string channelAccess) 
         {
             var requestMessage = new HttpRequestMessage(HttpMethod.Post, $"https://api.line.me/v2/bot/user/{userId}/richmenu/{richMenuId}");
