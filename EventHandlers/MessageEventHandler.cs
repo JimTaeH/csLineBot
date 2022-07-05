@@ -1,13 +1,14 @@
 ﻿using System;
 using System.Threading.Tasks;
 using Line;
-using MyLineBot.Configuration;
+using MyLineBot.ConfigurationLINE;
 using System.Linq;
 using System.Net.Http;
 using System.Text;
 using JsonSerializer = System.Text.Json.JsonSerializer;
 using System.Text.Json;
 using System.Collections.Generic;
+using MyLineBot.Common;
 
 namespace MyLineBot.EventHandlers
 {
@@ -27,10 +28,11 @@ namespace MyLineBot.EventHandlers
 
         public async Task Handle(ILineBot lineBot, ILineEvent evt)
         {
-            var context = new Models.SchoolDBContext();
-            var contextLogin = new Models.LineUserDBContext();
-            var ctx00008 = new Models._00008Context();
-            var ctxSIMAT = new CenterDB.SIMATCOMMONContext();
+            //var context = new Models.SchoolDBContext();
+            //var contextLogin = new Models.LineUserDBContext();
+            //var ctx00008 = new Models._00008Context();
+            //var ctxSIMAT = new CenterDB.SIMATCOMMONContext();
+            var simatDB = new DatabaseManager().Common();
 
             // The Webhook URL verification uses these invalid token.
             if (evt.ReplyToken == "00000000000000000000000000000000" || evt.ReplyToken == "ffffffffffffffffffffffffffffffff")
@@ -57,93 +59,16 @@ namespace MyLineBot.EventHandlers
 
                 await lineBot.Reply(evt.ReplyToken, response);
             }
-            else if (evt.Message.Text.ToLowerInvariant().Contains("logo"))
-            {
-                var logoUrl = this.configuration.ResourcesUrl + "/Images/sample_frog.png";
+            //else if (evt.Message.Text.ToLowerInvariant().Contains("logo"))
+            //{
+            //    var logoUrl = this.configuration.ResourcesUrl + "/Images/sample_frog.png";
 
-                Console.WriteLine(logoUrl);
-                var response = new ImageMessage(logoUrl, logoUrl);
+            //    Console.WriteLine(logoUrl);
+            //    var response = new ImageMessage(logoUrl, logoUrl);
 
-                await lineBot.Reply(evt.ReplyToken, response);
-            }
+            //    await lineBot.Reply(evt.ReplyToken, response);
+            //}
             // add my
-            else if (evt.Message.Text.Contains("สวัสดี"))
-            {
-                var response = new TextMessage("สวัสดีครับจาก NotifySKF");
-
-                await lineBot.Reply(evt.ReplyToken, response);
-            }
-            else if (evt.Message.Text == "echo echo")
-            {
-                await lineBot.Reply(evt.ReplyToken, new TextMessage(evt.Message.Text));
-            }
-            else if (evt.Message.Text.Contains("Data"))
-            {
-                string fullText = evt.Message.Text;
-                string[] queryText = fullText.Split(" ");
-
-                try
-                {
-                    var uName = context.Students.SingleOrDefault(x => x.Name == $"{queryText[1]}");
-                    var uCourse = context.Courses.SingleOrDefault(x => x.CourseId == uName.CourseId);
-
-                    var response = new TextMessage($"Your name in DB: {uName.Name} {uName.FirstName} {uName.LastName}");
-                    var response2 = new TextMessage($"Your course is: {uCourse.CourseName}");
-                    await lineBot.Reply(evt.ReplyToken, response, response2);
-                }
-                catch (InvalidOperationException)
-                {
-                    var response = new TextMessage($"Your query {queryText}");
-                    await lineBot.Reply(evt.ReplyToken, response);
-                }
-            }
-            else if (evt.Message.Text.Contains("Course"))
-            {
-                string fullText = evt.Message.Text;
-                string[] queryText = fullText.Split(" ");
-
-                var uName = context.Students.SingleOrDefault(x => x.Name == $"{queryText[1]}");
-                var uCourse = context.Courses.SingleOrDefault(x => x.CourseId == uName.CourseId);
-
-                var flexMessage = new flexCourse().course(evt.ReplyToken, uCourse.CourseName);
-
-                string jsonString = JsonSerializer.Serialize(flexMessage);
-                Console.WriteLine($"PostedData {jsonString}");
-
-                var requestMsg = new SendRequest().replyMsg(jsonString, chAccess);
-                await client.SendAsync(requestMsg);
-            }
-            else if (evt.Message.Text.Contains("Card"))
-            {
-                string fullText = evt.Message.Text;
-                string[] queryText = fullText.Split(" ");
-
-                var uName = context.Students.SingleOrDefault(x => x.Name == $"{queryText[1]}");
-                var uCourse = context.Courses.SingleOrDefault(x => x.CourseId == uName.CourseId);
-
-                var flexMessage = new flexStudentCard().studentCard(evt.ReplyToken, uName.Name, uName.FirstName, uName.LastName);
-
-                string jsonString = JsonSerializer.Serialize(flexMessage);
-                Console.WriteLine($"PostedData {jsonString}");
-
-                var requestMsg = new SendRequest().replyMsg(jsonString, chAccess);
-                await client.SendAsync(requestMsg);
-            }
-            else if (evt.Message.Text.Contains("Detail"))
-            {
-                string fullText = evt.Message.Text;
-                string[] queryText = fullText.Split(" ");
-
-                var uCourse = context.Courses.SingleOrDefault(x => x.CourseName.Contains(queryText[1]));
-
-                var flexMessage = new flexCourseDetail().courseDetail(evt.ReplyToken, uCourse.CourseName, uCourse.CourseDesc);
-
-                string jsonString = JsonSerializer.Serialize(flexMessage);
-                Console.WriteLine($"PostedData {jsonString}");
-
-                var requestMsg = new SendRequest().replyMsg(jsonString, chAccess);
-                await client.SendAsync(requestMsg);
-            }
             else if (evt.Message.Text == "ติดตามสถานะพัสดุ") 
             {
                 var userId = evt.Source.User.Id;
@@ -156,11 +81,13 @@ namespace MyLineBot.EventHandlers
                 {
                 }
 
-                var qLineUser = ctxSIMAT.LineRegisters.Single(x => x.UserId == userId);
-                var qMbpd = ctx00008.Mbpds.Single(x=> x.Bpcode == qLineUser.Bpcode);
+                var userLINE = simatDB.LineRegisters.Single(x => x.UserId == userId);
+                string userDB = userLINE.Dbcode;
+                var customer = simatDB.Customers.Single(x => x.CustomerId == userDB);
+                var db = new DatabaseManager().Prototype(userDB);
 
                 string rtoken = evt.ReplyToken;
-                string companyName = $"{qMbpd.Bpname}";
+                string companyName = $"{customer.CustomerName}";
                 string jobNo = "0123456789";
                 string mdy1 = "2022-06-29";
                 string statusEmo1 = "📦";
@@ -177,6 +104,17 @@ namespace MyLineBot.EventHandlers
                 string status3 = "จัดส่งสำเร็จ";
                 string time3 = "14:20:01";
                 string locate3 = "ห้วยขวาง";
+
+                try 
+                {
+                    var jobs = db.Tjobs.Where(x => x.Bpcode == userLINE.Bpcode).ToList();
+                    jobNo = jobs[0].Jobno;
+                }
+                catch (InvalidOperationException) 
+                {
+                    var response = new TextMessage("ไม่พบข้อมูล");
+                    await lineBot.Reply(evt.ReplyToken, response);
+                }
 
                 var flexMessage = new flexTrackReply().flexTrackMsgReply(rtoken, companyName, jobNo, mdy1, statusEmo1, status1, time1, locate1, mdy2, statusEmo2, status2, time2, locate2, mdy3, statusEmo3, status3, time3, locate3);
 
@@ -186,78 +124,66 @@ namespace MyLineBot.EventHandlers
                 var requestMsg = new SendRequest().replyMsg(jsonString, chAccess);
                 await client.SendAsync(requestMsg);
 
-                var msglogs = new Models.LineMsgLog();
+                var msglogs = new Data.LineMsgLog();
                 msglogs.SentTime = DateTime.Now;
                 msglogs.ReplyToken = rtoken;
                 msglogs.ToUser = userId;
                 msglogs.PostedData = jsonString;
-                ctx00008.LineMsgLogs.Add(msglogs);
-                ctx00008.SaveChanges();
+                db.LineMsgLogs.Add(msglogs);
+                db.SaveChanges();
             }
             else if (evt.Message.Text == "Track txt")
             {
                 var response = new TextMessage("บริษัท A หมายเลขใบงาน 012345678 ขณะนี้สถานะของพัสดุคือ เข้าระบบ เมื่อวันที่ 06/27/2022 เวลา 10:00 น.");
                 await lineBot.Reply(evt.ReplyToken, response);
             }
-            else if (evt.Message.Text == "Track Push")
-            {
-                var userId = new List<string>();
-                userId.Add(contextLogin.LineLogins.Single(x => x.Value1 == "CompanyA").UserId);
+            //else if (evt.Message.Text == "Track Push")
+            //{
+            //    var userId = new List<string>();
+            //    userId.Add(simatDB.LineRegisters.Single(x => x.Value1 == "CompanyA").UserId);
 
-                string companyName = "Sample Co., Ltd.";
-                string jobNo = "0123456789";
-                string mdy1 = "2022-06-29";
-                string statusEmo1 = "📦";
-                string status1 = "รับฝาก";
-                string time1 = "10:11:59";
-                string locate1 = "ลาดกระบัง";
-                string mdy2 = "2022-06-29";
-                string statusEmo2 = "🚚";
-                string status2 = "อยู่ระหว่างจัดส่ง";
-                string time2 = "14:01:22";
-                string locate2 = "ห้วยขวาง";
-                string mdy3 = "2022-06-29";
-                string statusEmo3 = "✔️";
-                string status3 = "จัดส่งสำเร็จ";
-                string time3 = "14:20:01";
-                string locate3 = "ห้วยขวาง";
+            //    string companyName = "Sample Co., Ltd.";
+            //    string jobNo = "0123456789";
+            //    string mdy1 = "2022-06-29";
+            //    string statusEmo1 = "📦";
+            //    string status1 = "รับฝาก";
+            //    string time1 = "10:11:59";
+            //    string locate1 = "ลาดกระบัง";
+            //    string mdy2 = "2022-06-29";
+            //    string statusEmo2 = "🚚";
+            //    string status2 = "อยู่ระหว่างจัดส่ง";
+            //    string time2 = "14:01:22";
+            //    string locate2 = "ห้วยขวาง";
+            //    string mdy3 = "2022-06-29";
+            //    string statusEmo3 = "✔️";
+            //    string status3 = "จัดส่งสำเร็จ";
+            //    string time3 = "14:20:01";
+            //    string locate3 = "ห้วยขวาง";
 
-                var flexMessage = new flexTrackPush().flexTrackMsgPush(userId, companyName, jobNo, mdy1, statusEmo1, status1, time1, locate1, mdy2, statusEmo2, status2, time2, locate2, mdy3, statusEmo3, status3, time3, locate3);
+            //    var flexMessage = new flexTrackPush().flexTrackMsgPush(userId, companyName, jobNo, mdy1, statusEmo1, status1, time1, locate1, mdy2, statusEmo2, status2, time2, locate2, mdy3, statusEmo3, status3, time3, locate3);
 
-                string jsonString = JsonSerializer.Serialize(flexMessage);
-                Console.WriteLine($"PostedData {jsonString}");
+            //    string jsonString = JsonSerializer.Serialize(flexMessage);
+            //    Console.WriteLine($"PostedData {jsonString}");
 
-                var requestMsg = new SendRequest().pushMsg(jsonString, chAccess);
-                await client.SendAsync(requestMsg);
-            }
-            else if (evt.Message.Text == "Create Me")
+            //    var requestMsg = new SendRequest().pushMsg(jsonString, chAccess);
+            //    await client.SendAsync(requestMsg);
+            //}
+            else if (evt.Message.Text == "LINK MENU")
             {
                 var userId = evt.Source.User.Id;
                 var richMenuId = "richmenu-04e992516bfd579a44c8112b4de96d43";
 
-                var std = new Models.Student();
-                std.Name = "MungKornSS";
-                std.FirstName = "Mung";
-                std.LastName = "Korn";
-                std.Course = context.Courses.Single(x => x.CourseName == "Entity Framework");
-                context.Students.Add(std);
-                context.SaveChanges();
-
-                var response = new TextMessage("Created Success");
+                var response = new TextMessage("Menu Changed");
                 await lineBot.Reply(evt.ReplyToken, response);
 
                 var requestMsg = new SendRequest().linkRMOneUser(userId, richMenuId, chAccess);
                 await client.SendAsync(requestMsg);
             }
-            else if (evt.Message.Text == "Delete Me")
+            else if (evt.Message.Text == "UNLINK MENU")
             {
                 var userId = evt.Source.User.Id;
 
-                var std = context.Students.Single(x => x.Name == "MungKornSS");
-                context.Students.Remove(std);
-                context.SaveChanges();
-
-                var response = new TextMessage("Deleted Success");
+                var response = new TextMessage("Menu Changed");
                 await lineBot.Reply(evt.ReplyToken, response);
 
                 var requestMsg = new SendRequest().unlinkRMOneUser(userId, chAccess);

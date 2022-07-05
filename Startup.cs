@@ -1,6 +1,6 @@
 using System.IO;
 using Line;
-using MyLineBot.Configuration;
+using MyLineBot.ConfigurationLINE;
 using MyLineBot.EventHandlers;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
@@ -8,6 +8,8 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.FileProviders;
 using Microsoft.Extensions.Hosting;
+using MyLineBot.Data;
+using Microsoft.EntityFrameworkCore;
 
 namespace MyLineBot
 {
@@ -34,6 +36,9 @@ namespace MyLineBot
             services
                 .AddSingleton<ILineEventHandler, MessageEventHandler>()
                 .AddSingleton<ILineEventHandler, PostbackEventHandler>();
+
+            services
+                .AddDbContext<DataContext>(options => options.UseSqlServer(_configuration.GetConnectionString("DataContext")));
         }
 
         public void Configure(IApplicationBuilder app, IWebHostEnvironment env)

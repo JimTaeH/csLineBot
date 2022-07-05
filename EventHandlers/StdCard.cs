@@ -1,5 +1,5 @@
 ﻿using System.Collections.Generic;
-
+// Example of Flexmessages
 namespace MyLineBot.EventHandlers
 {
     public class replyCard

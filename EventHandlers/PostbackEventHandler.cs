@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Threading.Tasks;
 using Line;
-using MyLineBot.Configuration;
+using MyLineBot.ConfigurationLINE;
 using System.Linq;
 using System.Net.Http;
 using System.Text;
@@ -24,8 +24,6 @@ namespace MyLineBot.EventHandlers
         }
         public async Task Handle(ILineBot lineBot, ILineEvent evt) 
         {
-            var context = new Models.SchoolDBContext();
-
             // The Webhook URL verification uses these invalid token.
             if (evt.ReplyToken == "00000000000000000000000000000000" || evt.ReplyToken == "ffffffffffffffffffffffffffffffff")
                 return;
